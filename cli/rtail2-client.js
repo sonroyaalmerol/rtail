@@ -1,10 +1,10 @@
 #!/bin/sh
-":" //# comment; exec /usr/bin/env node --harmony "$0" "$@"
+':' // # comment; exec /usr/bin/env node --harmony "$0" "$@"
 
 /*!
- * rtail-client.js
- * Created by Kilian Ciuffolo on Oct 26, 2014
- * (c) 2014-2015
+ * rtail2-client.js (based on the original rtail-client)
+ * Original created by Kilian Ciuffolo
+ * Modified by Son Roy Almerol
  */
 
 'use strict'
@@ -32,14 +32,14 @@ updateNotifier({
  * parsing argv
  */
 let argv = yargs
-  .usage('Usage: cmd | rtail [OPTIONS]')
-  .example('server | rtail > server.log', 'localhost + file')
-  .example('server | rtail --id api.domain.com', 'Name the log stream')
-  .example('server | rtail --host example.com', 'Sends to example.com')
-  .example('server | rtail --port 43567', 'Uses custom port')
-  .example('server | rtail --mute', 'No stdout')
-  .example('server | rtail --no-tty', 'Strips ansi colors')
-  .example('server | rtail --no-date-parse', 'Disable date parsing/stripping')
+  .usage('Usage: cmd | rtail2 [OPTIONS]')
+  .example('server | rtail2 > server.log', 'localhost + file')
+  .example('server | rtail2 --id api.domain.com', 'Name the log stream')
+  .example('server | rtail2 --host example.com', 'Sends to example.com')
+  .example('server | rtail2 --port 43567', 'Uses custom port')
+  .example('server | rtail2 --mute', 'No stdout')
+  .example('server | rtail2 --no-tty', 'Strips ansi colors')
+  .example('server | rtail2 --no-parse-date', 'Disable date parsing/stripping')
   .option('host', {
     alias: 'h',
     type: 'string',
@@ -55,7 +55,7 @@ let argv = yargs
   .option('id', {
     alias: 'name',
     type: 'string',
-    default: function moniker() { return moniker_() } ,
+    default: function moniker () { return moniker_() },
     describe: 'The log stream id'
   })
   .option('mute', {
@@ -136,13 +136,13 @@ process.stdin
     baseMessage.content = line
 
     // prepare binary message
-    let buffer = new Buffer(JSON.stringify(baseMessage))
+    let buffer = Buffer.from(JSON.stringify(baseMessage))
 
     // set semaphore
-    isSending ++
+    isSending++
 
     socket.send(buffer, 0, buffer.length, argv.port, argv.host, function () {
-      isSending --
+      isSending--
       if (isClosed && !isSending) socket.close()
     })
   })

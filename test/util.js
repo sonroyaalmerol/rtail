@@ -12,7 +12,7 @@ const dgram = require('dgram')
 /**
  *
  */
-module.exports.spawnClient = function spawnClient(opts) {
+module.exports.spawnClient = function spawnClient (opts) {
   opts = opts || {}
 
   if (!opts.socket) {
@@ -42,7 +42,7 @@ module.exports.spawnClient = function spawnClient(opts) {
 /**
  *
  */
-module.exports.spawnServer = function spawnServer(opts) {
+module.exports.spawnServer = function spawnServer (opts) {
   opts = opts || {}
 
   let server = spawn('cli/rtail-server.js', opts.args)
@@ -60,6 +60,6 @@ module.exports.spawnServer = function spawnServer(opts) {
 /**
  *
  */
-module.exports.s = function s(obj) {
+module.exports.s = function s (obj) {
   return JSON.stringify(obj, null, '  ')
 }

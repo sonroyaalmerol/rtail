@@ -35,7 +35,7 @@ describe('rtail-server.js', function () {
         let ws = io.connect('http://localhost:8888')
 
         ws.on('streams', function (data) {
-          if (null === streams) {
+          if (streams === null) {
             ws.emit('select stream', data[0])
           }
           streams = data
@@ -86,7 +86,6 @@ describe('rtail-server.js', function () {
     }, 1000)
   })
 
-
   it('should serve the webapp from s3', function (done) {
     server.kill()
     server = spawnServer({
@@ -112,7 +111,7 @@ describe('rtail-server.js', function () {
           '--udp-host', address,
           '--udp-port', 9998,
           '--web-host', address,
-          '--web-port', 8889,
+          '--web-port', 8889
         ]
       })
 

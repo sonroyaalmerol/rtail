@@ -1,24 +1,22 @@
 #!/bin/sh
-":" //# comment; exec /usr/bin/env node --harmony "$0" "$@"
+':' // # comment; exec /usr/bin/env node --harmony "$0" "$@"
 
 /*!
- * server.js
- * Created by Kilian Ciuffolo on Oct 26, 2014
- * (c) 2014-2015
+ * rtail2-server.js (based on the original rtail-server)
+ * Original created by Kilian Ciuffolo
+ * Modified by Son Roy Almerol
  */
 
 'use strict'
 
 const dgram = require('dgram')
-const app = require('express')()
-const serve = require('express').static
-const http = require('http').Server(app)
-const io = require('socket.io')()
+const fastify = require('fastify')()
+const io = require('socket.io')(fastify.server)
 const yargs = require('yargs')
-const debug = require('debug')('rtail:server')
-const webapp = require('./lib/webapp')
+const debug = require('debug')('rtail2:server')
 const updateNotifier = require('update-notifier')
 const pkg = require('../package')
+const path = require('path')
 
 /*!
  * inform the user of updates
@@ -32,12 +30,9 @@ updateNotifier({
  * parsing argv
  */
 let argv = yargs
-  .usage('Usage: rtail-server [OPTIONS]')
-  .example('rtail-server --web-port 8080', 'Use custom HTTP port')
-  .example('rtail-server --udp-port 8080', 'Use custom UDP port')
-  .example('rtail-server --web-version stable', 'Always uses latest stable webapp')
-  .example('rtail-server --web-version unstable', 'Always uses latest develop webapp')
-  .example('rtail-server --web-version 0.1.3', 'Use webapp v0.1.3')
+  .usage('Usage: rtail2-server [OPTIONS]')
+  .example('rtail2-server --web-port 8080', 'Use custom HTTP port')
+  .example('rtail2-server --udp-port 8080', 'Use custom UDP port')
   .option('udp-host', {
     alias: 'uh',
     default: '127.0.0.1',
@@ -58,9 +53,10 @@ let argv = yargs
     default: 8888,
     describe: 'The listening HTTP port'
   })
-  .option('web-version', {
-    type: 'string',
-    describe: 'Define web app version to serve'
+  .option('buffer-size', {
+    alias: 'bs',
+    default: 100,
+    describe: 'The max log buffer size'
   })
   .help('help')
   .alias('help', 'h')
@@ -77,8 +73,7 @@ let socket = dgram.createSocket('udp4')
 
 socket.on('message', function (data, remote) {
   // try to decode JSON
-  try { data = JSON.parse(data) }
-  catch (err) { return debug('invalid data sent') }
+  try { data = JSON.parse(data) } catch (err) { return debug('invalid data sent') }
 
   if (!streams[data.id]) {
     streams[data.id] = []
@@ -94,8 +89,7 @@ socket.on('message', function (data, remote) {
     type: typeof data.content
   }
 
-  // limit backlog to 100 lines
-  streams[data.id].length >= 100 && streams[data.id].shift()
+  streams[data.id].length >= argv.bufferSize && streams[data.id].shift()
   streams[data.id].push(message)
 
   debug(JSON.stringify(message))
@@ -108,37 +102,24 @@ socket.on('message', function (data, remote) {
 io.on('connection', function (socket) {
   socket.emit('streams', Object.keys(streams))
   socket.on('select stream', function (stream) {
-    socket.leave(socket.rooms[0])
+    Object.keys(socket.rooms).forEach(function (key) {
+      socket.leave(socket.rooms[key])
+    })
     if (!stream) return
     socket.join(stream)
     socket.emit('backlog', streams[stream])
   })
 })
 
-/*!
- * serve static webapp from S3
- */
-if (!argv.webVersion) {
-  app.use(serve(__dirname + '/../dist'))
-} else if ('development' === argv.webVersion) {
-  app.use('/app', serve(__dirname + '/../app'))
-  app.use('/node_modules', serve(__dirname + '/../node_modules'))
-  io.path('/app/socket.io')
-} else {
-  app.use(webapp({
-    s3: 'http://rtail.s3-website-us-east-1.amazonaws.com/' + argv.webVersion,
-    ttl: 1000 * 60 * 60 * 6 // 6H
-  }))
-
-  debug('serving webapp from: http://rtail.s3-website-us-east-1.amazonaws.com/%s', argv.webVersion)
-}
+fastify.register(require('fastify-static'), {
+  root: path.join(__dirname, '../app')
+})
 
 /*!
  * listen!
  */
-io.attach(http, { serveClient: false })
 socket.bind(argv.udpPort, argv.udpHost)
-http.listen(argv.webPort, argv.webHost)
+fastify.listen(argv.webPort, argv.webHost)
 
 debug('UDP  server listening: %s:%s', argv.udpHost, argv.udpPort)
 debug('HTTP server listening: http://%s:%s', argv.webHost, argv.webPort)

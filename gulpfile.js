@@ -54,13 +54,12 @@ gulp.task('sass', function () {
 gulp.task('ejs', function () {
   return gulp.src('app/app.ejs')
     .pipe(plugins.ejs({ version: version }, { ext: '.js' }))
-      .on('error', function (err) {
-        plugins.util.log('ejs error', err.message)
-        plugins.util.beep()
-      })
+    .on('error', function (err) {
+      plugins.util.log('ejs error', err.message)
+      plugins.util.beep()
+    })
     .pipe(gulp.dest('app'))
 })
-
 
 /**
  * Compile templates
@@ -76,14 +75,14 @@ gulp.task('hjs', function (done) {
   npmInstall.stderr.pipe(process.stderr)
 
   npmInstall.on('close', function (code) {
-    if (0 !== code) throw new Error('npm install exited with ' + code)
+    if (code !== 0) throw new Error('npm install exited with ' + code)
 
     var build = spawn('node', ['tools/build.js', '-n', 'json'], opts)
     build.stdout.pipe(process.stdout)
     build.stderr.pipe(process.stderr)
 
     build.on('close', function (code) {
-      if (0 !== code) throw new Error('node tools/build.js exited with ' + code)
+      if (code !== 0) throw new Error('node tools/build.js exited with ' + code)
       done()
     })
   })
@@ -102,7 +101,7 @@ gulp.task('app', ['build:app'], function (done) {
   gulp.watch([
     'app/**/*',
     '!app/app.ejs',
-    '!app/scss/*',
+    '!app/scss/*'
   ]).on('change', function (file) {
     plugins.livereload.changed(file.path)
   })
@@ -137,7 +136,7 @@ gulp.task('app', ['build:app'], function (done) {
     '200 GET /1/alive'
   ]
 
-  function log2rtail(str) {
+  function log2rtail (str) {
     rTailClient.stdin.write(str + '\n')
   }
 
@@ -156,16 +155,16 @@ gulp.task('app', ['build:app'], function (done) {
         bar: 'foo',
         count: Math.random() * 1000,
         list: [
-          "foo",
-          "bar"
+          'foo',
+          'bar'
         ],
         doc: {
           foo: 'bar',
           bar: 'foo'
         },
-        link: "http://google.com",
+        link: 'http://google.com',
         regexp: /a.?/,
-        color: "#fff"
+        color: '#fff'
       }))
     }
   }, 1000)
@@ -219,7 +218,7 @@ gulp.task('minify:js', function () {
 
 gulp.task('minify:css', function () {
   return gulp.src('dist/css/bundle.min.css')
-    .pipe(plugins.minifyCss( { keepSpecialComments: 0, keepBreaks: true }))
+    .pipe(plugins.minifyCss({ keepSpecialComments: 0, keepBreaks: true }))
     .pipe(gulp.dest('dist/css/'))
 })
 
@@ -229,7 +228,7 @@ gulp.task('minify:css', function () {
 
 gulp.task('minify:html', function () {
   return gulp.src('dist/index.html')
-    .pipe(plugins.minifyHtml( { conditionals: true, quotes: true }))
+    .pipe(plugins.minifyHtml({ conditionals: true, quotes: true }))
     .pipe(gulp.dest('dist/'))
 })
 
