@@ -112,7 +112,7 @@ io.on('connection', function (socket) {
 })
 
 fastify.register(require('fastify-static'), {
-  root: path.join(__dirname, '../app')
+  root: path.join(__dirname, '../dist')
 })
 
 /*!
