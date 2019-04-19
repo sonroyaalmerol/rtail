@@ -1,5 +1,4 @@
-#!/bin/sh
-':' // # comment; exec /usr/bin/env node --harmony "$0" "$@"
+#!/usr/bin/env node
 
 /*!
  * rtail2-server.js (based on the original rtail-server)
