@@ -40,7 +40,7 @@
     "vuex": "^3.0.1"
   },
   "devDependencies": {
-    "ansi_up": "^4.0.3",
+    "ansi_up": "^5.0.0",
     "chai": "^4.2.0",
     "del": "^4.1.0",
     "localforage": "^1.7.3",
